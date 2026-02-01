@@ -3,11 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0e0e10">
+<meta name="description" content="CMD Palette — a lightweight macOS menu bar app that launches dev projects, copies terminal commands, and starts dev servers with one click. Built with Tauri.">
 <title>multi-tool — Small tools for developers</title>
+<link rel="dns-prefetch" href="https://buy.stripe.com">
+<link rel="preconnect" href="https://buy.stripe.com" crossorigin>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .win-banner:not(.hidden) { animation: none; }
+    .unlock-card { transition: none; }
+    .download-section { transition: none; }
+  }
 
   :root {
+    color-scheme: dark;
     --bg: #0e0e10;
     --surface: #18181b;
     --surface2: #222226;
@@ -34,6 +46,20 @@
   a:hover { text-decoration: underline; }
 
   .container { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── Utilities ── */
+  .hidden { display: none; }
+
+  code, .kbd {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .hero-jump-link { margin-top: 16px; }
+  .hero-jump-link a { font-size: 13px; letter-spacing: 0.5px; }
 
   /* ── Site Hero ── */
   .site-hero {
@@ -70,8 +96,6 @@
     margin-bottom: 24px;
   }
   .tool-hero-header img {
-    width: 40px;
-    height: 40px;
     border-radius: 8px;
   }
   .tool-hero-header h2 {
@@ -129,15 +153,7 @@
     color: var(--text-muted);
     line-height: 1.7;
   }
-  .feature-item .kbd {
-    display: inline-block;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 1px 6px;
-    font-size: 12px;
-    color: var(--text);
-  }
+  .feature-item .kbd { display: inline-block; }
 
   /* ── Specs ── */
   .specs {
@@ -168,8 +184,18 @@
     border-radius: 50%;
     flex-shrink: 0;
   }
+  /* ── Mobile (≤560px) ── */
   @media (max-width: 560px) {
+    .site-hero h1 { font-size: 28px; }
+    .site-hero { padding: 48px 0 20px; }
+    .tool-hero-header h2 { font-size: 22px; }
     .specs li { flex-basis: 100%; }
+    .unlock-grid { grid-template-columns: 1fr; }
+    .unlock-or { text-align: center; }
+    .mm-legend { flex-direction: column; gap: 8px; }
+    .guess-input-row { flex-wrap: wrap; }
+    .guess-input-row input { max-width: 100%; }
+    .tools-grid { grid-template-columns: 1fr; }
   }
 
   /* ── Sections ── */
@@ -202,15 +228,16 @@
     letter-spacing: 1.5px;
     color: var(--text-muted);
   }
-  @media (max-width: 560px) {
-    .unlock-grid { grid-template-columns: 1fr; }
-    .unlock-or { text-align: center; }
-  }
   .unlock-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 24px;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .unlock-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
   .unlock-card h3 {
     font-size: 16px;
@@ -243,6 +270,11 @@
   }
   .btn-green { background: var(--green); color: #0e0e10; }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn:focus-visible,
+  .license-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
 
   /* ── Mastermind ── */
   .mastermind-area {
@@ -252,7 +284,6 @@
     padding: 24px;
     margin-top: 16px;
   }
-  .hidden { display: none; }
 
   .guess-input-row {
     display: flex;
@@ -299,7 +330,29 @@
   .guess-result { color: var(--text-muted); }
   .guess-result .correct { color: var(--green); font-weight: 700; }
   .guess-result .misplaced { color: var(--yellow); font-weight: 700; }
+
+  .mm-legend {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    padding: 10px 14px;
+    background: var(--bg);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+  .mm-legend span { display: flex; align-items: center; gap: 6px; }
+  .mm-legend .dot-green { color: var(--green); }
+  .mm-legend .dot-yellow { color: var(--yellow); }
   .guess-num { color: var(--text-muted); min-width: 24px; text-align: right; }
+
+  .mm-error {
+    color: var(--red);
+    font-size: 13px;
+    margin-bottom: 8px;
+    min-height: 20px;
+  }
 
   .mm-status {
     font-size: 13px;
@@ -314,6 +367,15 @@
     font-weight: 700;
     font-size: 16px;
   }
+  .win-banner:not(.hidden) {
+    animation: winReveal 0.3s ease-out;
+  }
+  @keyframes winReveal {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .win-banner-tip { margin-top: 12px; }
+  .win-banner-tip .btn { font-size: 13px; }
 
   /* ── Download ── */
   .download-section {
@@ -322,6 +384,7 @@
     border-radius: var(--radius);
     padding: 32px 24px;
     text-align: center;
+    transition: opacity 0.3s ease;
   }
   .download-section.locked {
     opacity: 0.4;
@@ -375,20 +438,12 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
   }
-  @media (max-width: 560px) {
-    .tools-grid { grid-template-columns: 1fr; }
-  }
   .tool-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 24px 20px;
     text-align: center;
-  }
-  .tool-card .icon {
-    font-size: 28px;
-    margin-bottom: 12px;
-    display: block;
   }
   .tool-card h4 { font-size: 14px; margin-bottom: 6px; }
   .tool-card p { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
@@ -405,7 +460,11 @@
   }
 
   /* ── Guide ── */
-  .guide { margin-bottom: 56px; }
+  .guide {
+    margin-bottom: 56px;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 1200px;
+  }
   .guide h3 {
     font-size: 16px;
     color: var(--text);
@@ -436,14 +495,6 @@
     margin: 16px 0;
     background: var(--surface);
     border-radius: 0 var(--radius) var(--radius) 0;
-  }
-  .guide code {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 1px 6px;
-    font-size: 12px;
-    color: var(--text);
   }
   .guide pre {
     background: var(--surface);
@@ -483,6 +534,27 @@
   .shortcut-table td:first-child { color: var(--text); white-space: nowrap; }
   .shortcut-table td:last-child { color: var(--text-muted); }
 
+  /* ── About ── */
+  .story p + p { margin-top: 12px; }
+
+  /* ── Skip Link ── */
+  .skip-link {
+    position: absolute;
+    top: -100%;
+    left: 16px;
+    background: var(--accent);
+    color: var(--bg);
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 100;
+    text-decoration: none;
+  }
+  .skip-link:focus {
+    top: 16px;
+  }
+
   /* ── Footer ── */
   footer {
     padding: 32px 0;
@@ -492,16 +564,21 @@
     border-top: 1px solid var(--border);
     margin-top: 24px;
   }
+  footer a { color: var(--text-muted); font-size: 12px; text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  footer .copyright { margin-top: 8px; }
 </style>
 </head>
 <body>
 
-<div class="container">
+<a href="#main-content" class="skip-link">Skip to content</a>
+<div class="container" id="main-content">
 
   <!-- Site Hero -->
   <div class="site-hero">
     <h1><span>multi-tool</span></h1>
     <p>Small, focused tools for developers. Built to solve one thing well, distributed here.</p>
+    <p class="hero-jump-link"><a href="#get-cmd-palette">Jump to download &darr;</a></p>
   </div>
 
   <hr class="site-divider">
@@ -509,7 +586,7 @@
   <!-- CMD Palette -->
   <div class="tool-hero">
     <div class="tool-hero-header">
-      <img src="icon.png" alt="CMD Palette icon" />
+      <img src="icon.png" alt="CMD Palette icon" width="40" height="40" decoding="async" />
       <h2>CMD PALETTE</h2>
       <span class="tool-hero-badge">macOS menu bar app</span>
     </div>
@@ -521,7 +598,7 @@
   </div>
 
   <div class="screenshot">
-    <img src="screenshots/cmd-palette.png" alt="CMD Palette showing project list and terminal" />
+    <img src="screenshots/cmd-palette.png" alt="CMD Palette showing project list and terminal" width="720" height="450" loading="lazy" decoding="async" />
   </div>
 
   <div class="features">
@@ -566,36 +643,41 @@
   </ul>
 
   <!-- Unlock Paths -->
-  <section>
+  <section id="get-cmd-palette">
     <div class="section-title">Get cmd-palette</div>
     <p class="unlock-intro">No sign-up, no paywall. Just a little challenge — or a little generosity.</p>
     <div class="unlock-grid">
       <div class="unlock-card">
         <h3>Crack the code</h3>
         <p>Play a round of Mastermind. Guess the 4-digit code and the download unlocks. Takes a few minutes if you're sharp.</p>
-        <button class="btn btn-primary" id="start-puzzle-btn" onclick="togglePuzzle()">Start Puzzle</button>
+        <button class="btn btn-primary" id="start-puzzle-btn">Start Puzzle</button>
       </div>
       <div class="unlock-or">or</div>
       <div class="unlock-card">
         <h3>Leave a tip</h3>
         <p>Skip the puzzle — drop $3 and download right away. That's it. No subscription, no account.</p>
+        <!-- TODO: Stripe URL duplicated in win-banner below — extract to a shared variable if it changes -->
         <a class="btn btn-outline" href="https://buy.stripe.com/7sYdR90w58cb75l72r3Nm00" target="_blank" rel="noopener">Tip $3</a>
       </div>
     </div>
 
     <!-- Mastermind Game -->
     <div class="mastermind-area hidden" id="mastermind">
-      <div class="mm-status" id="mm-status">Guess a 4-digit code (digits 0-9, no repeats). You have unlimited attempts.</div>
-      <div class="guess-input-row">
-        <input type="text" id="guess-input" maxlength="4" placeholder="1234" autocomplete="off" />
-        <button class="btn btn-primary" id="guess-btn" onclick="submitGuess()">Guess</button>
+      <div class="mm-status" id="mm-status" aria-live="polite">Guess a 4-digit code (digits 0-9, each digit unique). You have unlimited attempts.</div>
+      <div class="mm-legend" id="mm-legend">
+        <span><span class="dot-green" aria-hidden="true">&#9679;</span> Exact = right digit, right place</span>
+        <span><span class="dot-yellow" aria-hidden="true">&#9679;</span> Misplaced = right digit, wrong place</span>
       </div>
-      <div id="mm-error" style="color: var(--red); font-size: 13px; margin-bottom: 8px; min-height: 20px;"></div>
+      <div class="guess-input-row">
+        <input type="text" id="guess-input" maxlength="4" placeholder="1234" autocomplete="off" aria-label="Enter your 4-digit guess" aria-describedby="mm-status mm-legend" inputmode="numeric" pattern="\d{4}" />
+        <button class="btn btn-primary" id="guess-btn">Guess</button>
+      </div>
+      <div class="mm-error" id="mm-error" role="alert"></div>
       <div class="guess-history" id="guess-history"></div>
       <div class="win-banner hidden" id="win-banner">
         You cracked it! Download unlocked below.
-        <div style="margin-top: 12px;">
-          <a class="btn btn-outline" href="https://buy.stripe.com/7sYdR90w58cb75l72r3Nm00" target="_blank" rel="noopener" style="font-size: 13px;">Tip $3 anyway</a>
+        <div class="win-banner-tip">
+          <a class="btn btn-outline" href="https://buy.stripe.com/7sYdR90w58cb75l72r3Nm00" target="_blank" rel="noopener">Tip $3 anyway</a>
         </div>
       </div>
     </div>
@@ -605,11 +687,11 @@
   <section>
     <div class="section-title">Download</div>
     <div class="download-section locked" id="download-section">
-      <div class="lock-overlay" id="lock-overlay">Solve the puzzle or leave a tip to unlock.</div>
-      <h3 id="dl-heading" style="display:none;">cmd-palette</h3>
-      <p id="dl-desc" style="display:none;">macOS · Universal binary · Requires macOS 13+</p>
-      <a class="btn btn-green" id="dl-btn" style="display:none;" href="CMD%20Palette_0.1.0_aarch64.dmg" download>Download CMD Palette (.dmg)</a>
-      <button class="license-toggle" id="license-btn" style="display:none;" onclick="toggleLicense()">View License</button>
+      <div class="lock-overlay" id="lock-overlay">Crack the code above or leave a $3 tip to unlock this download.</div>
+      <h3 id="dl-heading" class="hidden">cmd-palette</h3>
+      <p id="dl-desc" class="hidden">macOS · Universal binary · Requires macOS 13+</p>
+      <a class="btn btn-green hidden" id="dl-btn" href="CMD%20Palette_0.1.0_aarch64.dmg" download>Download CMD Palette (.dmg)</a>
+      <button class="license-toggle hidden" id="license-btn" aria-expanded="false" aria-controls="license-text">View License</button>
       <div class="license-text" id="license-text">MIT License
 
 Copyright (c) 2025
@@ -643,8 +725,9 @@ SOFTWARE.</div>
       <li>Open the DMG file</li>
       <li>Drag CMD Palette to your Applications folder</li>
       <li>Launch it from Applications — you'll see a small icon appear in your menu bar</li>
-      <li><strong>First launch:</strong> macOS will block it because it's unsigned. Go to <strong>System Settings &gt; Privacy &amp; Security</strong>, scroll down, and click <strong>Open Anyway</strong></li>
+      <li>Launch it — macOS may show a security prompt (see note below)</li>
     </ol>
+    <div class="note"><strong>First launch:</strong> macOS will block CMD Palette because it's unsigned. Go to <strong>System Settings &gt; Privacy &amp; Security</strong>, scroll down, and click <strong>Open Anyway</strong>. This only happens once.</div>
 
     <h3>Set Up Your Projects</h3>
     <ol>
@@ -707,9 +790,21 @@ SOFTWARE.</div>
   <section>
     <div class="section-title">More tools</div>
     <div class="tools-grid">
-      <div class="tool-card"><span class="badge">Coming Soon</span></div>
-      <div class="tool-card"><span class="badge">Coming Soon</span></div>
-      <div class="tool-card"><span class="badge">Coming Soon</span></div>
+      <div class="tool-card">
+        <h4>Env Sync</h4>
+        <p>Manage .env files across projects without the mess.</p>
+        <span class="badge">Coming Soon</span>
+      </div>
+      <div class="tool-card">
+        <h4>Port Scout</h4>
+        <p>See what's running on every port. Kill with one click.</p>
+        <span class="badge">Coming Soon</span>
+      </div>
+      <div class="tool-card">
+        <h4>Snip Shelf</h4>
+        <p>Drag-and-drop code snippet manager for your menu bar.</p>
+        <span class="badge">Coming Soon</span>
+      </div>
     </div>
   </section>
 
@@ -718,121 +813,183 @@ SOFTWARE.</div>
     <div class="section-title">About</div>
     <div class="story">
       <p>I'm a self-described "vibe engineer" — one step beyond vibe coder. The projects I build have real, layered complexity, but I still write zero code by hand. I copy-paste from the internet, wire things together with AI, and ship tools that actually work.</p>
-      <p style="margin-top: 12px;">If that sounds like you, no judgment. I'm living proof you can build genuinely useful software without formal coding experience. Having a tool that keeps your commands organized and your projects one click away makes all the difference. That's why I built this.</p>
+      <p>If that sounds like you, no judgment. I'm living proof you can build genuinely useful software without formal coding experience. Having a tool that keeps your commands organized and your projects one click away makes all the difference. That's why I built this.</p>
     </div>
   </section>
 
 </div>
 
 <footer>
-  <div class="container">&copy; 2026 devlines</div>
+  <div class="container">
+    <a href="#main-content">Back to top &uarr;</a>
+    <div class="copyright">&copy; 2026 devlines</div>
+  </div>
 </footer>
 
 <script>
-  // ── Mastermind Logic ──
-  let secretCode = generateCode();
-  let guesses = [];
-  let solved = false;
+  // ── Mastermind Game ──
+  // A code-guessing puzzle (like Mastermind) that gates the download.
+  // Player guesses a 4-digit code with unique digits (0-9).
+  // Feedback: "exact" = correct digit in correct position,
+  //           "misplaced" = correct digit in wrong position.
 
+  // ── Helpers ──
+
+  const CODE_LENGTH = 4;
+
+  /**
+   * Generate a random code of CODE_LENGTH unique digits.
+   * Uses Fisher-Yates shuffle on digits 0-9, then takes the first CODE_LENGTH.
+   */
   function generateCode() {
-    const digits = [0,1,2,3,4,5,6,7,8,9];
+    const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
     for (let i = digits.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [digits[i], digits[j]] = [digits[j], digits[i]];
     }
-    return digits.slice(0, 4).map(String);
+    return digits.slice(0, CODE_LENGTH).map(String);
   }
 
+  // ── Game State ──
+
+  let secretCode = generateCode();
+  let guesses = [];
+  let solved = false;
+  let unlocked = false;
+
+  // ── Cached DOM References ──
+  // All getElementById calls live here — no lookups scattered in functions.
+
+  const puzzleArea = document.getElementById('mastermind');
+  const puzzleToggleBtn = document.getElementById('start-puzzle-btn');
+  const guessInput = document.getElementById('guess-input');
+  const guessBtn = document.getElementById('guess-btn');
+  const guessErrorEl = document.getElementById('mm-error');
+  const guessStatusEl = document.getElementById('mm-status');
+  const guessHistoryEl = document.getElementById('guess-history');
+  const winBanner = document.getElementById('win-banner');
+  const downloadSection = document.getElementById('download-section');
+  const lockOverlay = document.getElementById('lock-overlay');
+  const dlHeading = document.getElementById('dl-heading');
+  const dlDesc = document.getElementById('dl-desc');
+  const dlBtn = document.getElementById('dl-btn');
+  const licenseTextEl = document.getElementById('license-text');
+  const licenseBtnEl = document.getElementById('license-btn');
+
+  // ── Puzzle Visibility ──
+
   function togglePuzzle() {
-    const el = document.getElementById('mastermind');
-    const btn = document.getElementById('start-puzzle-btn');
-    if (el.classList.contains('hidden')) {
-      el.classList.remove('hidden');
-      btn.textContent = 'Hide Puzzle';
-      document.getElementById('guess-input').focus();
-    } else {
-      el.classList.add('hidden');
-      btn.textContent = 'Start Puzzle';
-    }
+    const isHidden = puzzleArea.classList.contains('hidden');
+    puzzleArea.classList.toggle('hidden');
+    puzzleToggleBtn.textContent = isHidden ? 'Hide Puzzle' : 'Start Puzzle';
+    if (isHidden) guessInput.focus();
   }
+
+  // ── Guess Submission ──
 
   function submitGuess() {
     if (solved) return;
-    const input = document.getElementById('guess-input');
-    const errEl = document.getElementById('mm-error');
-    const raw = input.value.trim();
-    errEl.textContent = '';
 
+    const raw = guessInput.value.trim();
+    guessErrorEl.textContent = '';
+
+    // Validate: must be exactly CODE_LENGTH digits
     if (!/^\d{4}$/.test(raw)) {
-      errEl.textContent = 'Enter exactly 4 digits.';
+      guessErrorEl.textContent = 'Enter exactly 4 digits.';
       return;
     }
 
+    // Validate: no repeated digits
     const digits = raw.split('');
-    if (new Set(digits).size !== 4) {
-      errEl.textContent = 'Digits must not repeat.';
+    if (new Set(digits).size !== CODE_LENGTH) {
+      guessErrorEl.textContent = 'Digits must not repeat.';
       return;
     }
 
-    let correctPos = 0;
-    let correctDigit = 0;
-    for (let i = 0; i < 4; i++) {
+    // Score the guess against the secret code
+    let exactCount = 0;
+    let misplacedCount = 0;
+    for (let i = 0; i < CODE_LENGTH; i++) {
       if (digits[i] === secretCode[i]) {
-        correctPos++;
+        exactCount++;
       } else if (secretCode.includes(digits[i])) {
-        correctDigit++;
+        misplacedCount++;
       }
     }
 
-    guesses.push({ code: raw, correctPos, correctDigit });
+    guesses.push({ code: raw, exactCount, misplacedCount });
     renderGuesses();
-    input.value = '';
-    input.focus();
+    guessInput.value = '';
+    guessInput.focus();
 
-    if (correctPos === 4) {
+    // Update status with attempt count
+    guessStatusEl.textContent = 'Attempt #' + guesses.length + ' — keep going!';
+
+    // Check for win — all digits in correct position
+    if (exactCount === CODE_LENGTH) {
       solved = true;
-      document.getElementById('guess-btn').disabled = true;
-      document.getElementById('guess-input').disabled = true;
-      document.getElementById('win-banner').classList.remove('hidden');
+      guessBtn.disabled = true;
+      guessInput.disabled = true;
+      guessStatusEl.textContent = 'Cracked in ' + guesses.length + (guesses.length === 1 ? ' attempt!' : ' attempts!');
+      winBanner.classList.remove('hidden');
       unlockDownload();
+      // Scroll download section into view after a brief pause
+      setTimeout(function() {
+        downloadSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 400);
     }
   }
 
+  // ── Guess History Rendering ──
+
   function renderGuesses() {
-    const el = document.getElementById('guess-history');
-    el.innerHTML = guesses.map((g, i) =>
+    const guess = guesses[guesses.length - 1];
+    guessHistoryEl.insertAdjacentHTML('afterbegin',
       `<div class="guess-row">
-        <span class="guess-num">${i + 1}</span>
-        <span class="guess-code">${g.code}</span>
-        <span class="guess-result"><span class="correct">${g.correctPos} exact</span> · <span class="misplaced">${g.correctDigit} misplaced</span></span>
-      </div>`
-    ).reverse().join('');
+        <span class="guess-num">${guesses.length}</span>
+        <span class="guess-code">${guess.code}</span>
+        <span class="guess-result"><span class="correct">&#9679; ${guess.exactCount} exact</span> · <span class="misplaced">&#9679; ${guess.misplacedCount} misplaced</span></span>
+      </div>`);
   }
 
-  // Enter key submits guess
-  document.getElementById('guess-input').addEventListener('keydown', function(e) {
+  // ── Download Unlock ──
+  // Removes the locked state from the download section, revealing download controls.
+  // Guarded against double-calls (puzzle win + ?paid query param can both trigger this).
+
+  function unlockDownload() {
+    if (unlocked) return;
+    unlocked = true;
+
+    downloadSection.classList.remove('locked');
+    lockOverlay.classList.add('hidden');
+    dlHeading.classList.remove('hidden');
+    dlDesc.classList.remove('hidden');
+    dlBtn.classList.remove('hidden');
+    licenseBtnEl.classList.remove('hidden');
+  }
+
+  // ── License Toggle ──
+
+  function toggleLicense() {
+    const isOpen = licenseTextEl.classList.toggle('open');
+    licenseBtnEl.setAttribute('aria-expanded', isOpen);
+  }
+
+  // ── Event Listeners ──
+  // All event binding is centralized here for consistency (no inline onclick).
+
+  puzzleToggleBtn.addEventListener('click', togglePuzzle);
+  guessBtn.addEventListener('click', submitGuess);
+  guessInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') submitGuess();
   });
+  licenseBtnEl.addEventListener('click', toggleLicense);
 
-  // ── Check for paid redirect ──
+  // ── Init ──
+  // If user arrived via payment redirect (?paid), unlock download immediately.
+
   if (new URLSearchParams(window.location.search).has('paid')) {
     unlockDownload();
-  }
-
-  // ── Unlock ──
-  function unlockDownload() {
-    const section = document.getElementById('download-section');
-    section.classList.remove('locked');
-    document.getElementById('lock-overlay').style.display = 'none';
-    document.getElementById('dl-heading').style.display = '';
-    document.getElementById('dl-desc').style.display = '';
-    document.getElementById('dl-btn').style.display = '';
-    document.getElementById('license-btn').style.display = '';
-  }
-
-  // ── License ──
-  function toggleLicense() {
-    document.getElementById('license-text').classList.toggle('open');
   }
 </script>
 
