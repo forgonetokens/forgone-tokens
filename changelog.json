@@ -3,6 +3,7 @@
     "id": 1,
     "hash": "079c67b",
     "text": "CMD Palette",
+    "description": "A browser extension born as a single HTML file",
     "link": "/tools/",
     "date": "2026-01-31",
     "category": "feature"
@@ -11,6 +12,7 @@
     "id": 2,
     "hash": "079c67b",
     "text": "Mastermind game",
+    "description": "Crack the code to unlock the download",
     "link": "/tools/",
     "date": "2026-01-31",
     "category": "feature"
@@ -19,6 +21,7 @@
     "id": 3,
     "hash": "079c67b",
     "text": "Stripe tips",
+    "description": "Pay what you want, or don't",
     "link": "/tools/",
     "date": "2026-01-31",
     "category": "integration"
@@ -27,6 +30,7 @@
     "id": 4,
     "hash": "99ed221",
     "text": "Skip links + ARIA",
+    "description": "Accessibility sweep across the markup",
     "link": "/",
     "date": "2026-01-31",
     "category": "a11y"
@@ -35,6 +39,7 @@
     "id": 5,
     "hash": "99ed221",
     "text": "Image compression",
+    "description": "Icons and screenshots compressed by 95%",
     "link": "/",
     "date": "2026-01-31",
     "category": "feature"
@@ -43,6 +48,7 @@
     "id": 6,
     "hash": "99ed221",
     "text": "Mobile full-bleed",
+    "description": "Cabinet fills the viewport on small screens",
     "link": "/",
     "date": "2026-01-31",
     "category": "design"
@@ -51,6 +57,7 @@
     "id": 7,
     "hash": "ebaf3f3",
     "text": "Custom domain",
+    "description": "forgonetokens.com wired to GitHub Pages",
     "link": "/",
     "date": "2026-02-01",
     "category": "integration"
@@ -59,6 +66,7 @@
     "id": 8,
     "hash": "536a0b4",
     "text": "The Single Cabinet",
+    "description": "Amber CRT arcade replaces the old landing page",
     "link": "/",
     "date": "2026-02-01",
     "category": "design"
@@ -67,6 +75,7 @@
     "id": 9,
     "hash": "536a0b4",
     "text": "Scanlines + grain",
+    "description": "CRT texture layered over the screen",
     "link": "/",
     "date": "2026-02-01",
     "category": "design"
@@ -75,6 +84,7 @@
     "id": 10,
     "hash": "536a0b4",
     "text": "Typing effect",
+    "description": "The marquee title writes itself on load",
     "link": "/",
     "date": "2026-02-01",
     "category": "feature"
@@ -83,6 +93,7 @@
     "id": 11,
     "hash": "536a0b4",
     "text": "Ghost cabinets",
+    "description": "Blurred silhouettes flanking the edges",
     "link": "/",
     "date": "2026-02-01",
     "category": "design"
@@ -91,6 +102,7 @@
     "id": 12,
     "hash": "536a0b4",
     "text": "Screen glow",
+    "description": "Brightness breathes on a 4-second cycle",
     "link": "/",
     "date": "2026-02-01",
     "category": "design"
@@ -99,6 +111,7 @@
     "id": 13,
     "hash": "8e11961",
     "text": "Forkiverse link",
+    "description": "CONNECT routes to the federated profile",
     "link": "/",
     "date": "2026-02-01",
     "category": "fix"
@@ -107,6 +120,7 @@
     "id": 14,
     "hash": "a81a070",
     "text": "Constellation changelog",
+    "description": "Project history rendered as a star map",
     "link": "/changelog/",
     "date": "2026-02-02",
     "category": "feature"
@@ -115,6 +129,7 @@
     "id": 15,
     "hash": "a81a070",
     "text": "Agent coordination",
+    "description": "Four agents coordinated via bulletin board",
     "link": "/changelog/",
     "date": "2026-02-02",
     "category": "feature"

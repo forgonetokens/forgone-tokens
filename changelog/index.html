@@ -176,32 +176,48 @@
     box-shadow: 0 0 12px var(--amber-bright), 0 0 24px var(--amber);
   }
 
-  /* Hover tooltip showing date and category */
+  /* Hover tooltip showing description, date, and category */
   .change-node .date-tooltip {
     position: absolute;
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
-    padding: 6px 10px;
+    padding: 8px 12px;
     background: var(--cab-body);
     border: 1px solid var(--cab-accent);
     border-radius: 4px;
     font-size: 10px;
     color: var(--text-secondary);
-    white-space: nowrap;
+    white-space: normal;
+    width: max-content;
+    max-width: 220px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease;
     margin-bottom: 8px;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     gap: 4px;
   }
 
   .change-node:hover .date-tooltip,
   .change-node:focus-visible .date-tooltip {
     opacity: 1;
+  }
+
+  .tooltip-desc {
+    color: var(--text-primary);
+    font-size: 11px;
+    line-height: 1.4;
+    min-height: 1.4em;
+  }
+
+  .tooltip-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
   }
 
   /* Category badges */
@@ -544,21 +560,30 @@ function positionNodes() {
     node.dataset.id = change.id;
     node.style.left = pos.x + 'px';
     node.style.top = pos.y + 'px';
-    node.setAttribute('aria-label', change.text + ' — ' + (categoryLabels[change.category] || change.category) + ', ' + change.date);
+    node.setAttribute('aria-label', change.text + ' — ' + (change.description || '') + ' — ' + (categoryLabels[change.category] || change.category) + ', ' + change.date);
 
     // Build content safely (no innerHTML)
     node.textContent = change.text;
     var tooltip = document.createElement('span');
     tooltip.className = 'date-tooltip';
     tooltip.setAttribute('aria-hidden', 'true');
+    var descSpan = document.createElement('span');
+    descSpan.className = 'tooltip-desc';
+    var metaWrap = document.createElement('span');
+    metaWrap.className = 'tooltip-meta';
     var badge = document.createElement('span');
     badge.className = 'category-badge ' + change.category;
     badge.textContent = categoryLabels[change.category] || change.category;
     var dateSpan = document.createElement('span');
     dateSpan.textContent = change.date;
-    tooltip.appendChild(badge);
-    tooltip.appendChild(dateSpan);
+    metaWrap.appendChild(badge);
+    metaWrap.appendChild(dateSpan);
+    tooltip.appendChild(descSpan);
+    tooltip.appendChild(metaWrap);
     node.appendChild(tooltip);
+
+    // Store description for typing effect
+    node.dataset.desc = change.description || '';
 
     // Staggered entrance animation (skip if reduced motion)
     if (!prefersReducedMotion) {
@@ -643,6 +668,63 @@ function addParticles() {
     constellation.appendChild(particle);
   }
 }
+
+// Tooltip typing effect
+var activeTyping = null;
+
+function startTyping(node) {
+  stopTyping();
+  var descEl = node.querySelector('.tooltip-desc');
+  var fullText = node.dataset.desc || '';
+  if (!fullText || !descEl) return;
+  descEl.textContent = '';
+  var i = 0;
+  activeTyping = {
+    node: node,
+    timer: null,
+    tick: function() {
+      if (i < fullText.length) {
+        descEl.textContent += fullText[i++];
+        activeTyping.timer = setTimeout(activeTyping.tick, 30);
+      }
+    }
+  };
+  if (prefersReducedMotion) {
+    descEl.textContent = fullText;
+  } else {
+    activeTyping.tick();
+  }
+}
+
+function stopTyping() {
+  if (activeTyping) {
+    clearTimeout(activeTyping.timer);
+    // Fill remaining text instantly on leave
+    var descEl = activeTyping.node.querySelector('.tooltip-desc');
+    if (descEl) descEl.textContent = activeTyping.node.dataset.desc || '';
+    activeTyping = null;
+  }
+}
+
+constellation.addEventListener('mouseover', function(e) {
+  var node = e.target.closest('.change-node');
+  if (node) startTyping(node);
+});
+
+constellation.addEventListener('mouseout', function(e) {
+  var node = e.target.closest('.change-node');
+  if (node) stopTyping();
+});
+
+constellation.addEventListener('focusin', function(e) {
+  var node = e.target.closest('.change-node');
+  if (node) startTyping(node);
+});
+
+constellation.addEventListener('focusout', function(e) {
+  var node = e.target.closest('.change-node');
+  if (node) stopTyping();
+});
 
 // Initialize
 loadChangelog();
