@@ -320,6 +320,33 @@
     transition: none;
   }
 
+  /* ── Sub Navigation ── */
+  .sub-nav {
+    margin-top: 16px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .sub-link {
+    font-family: var(--font-mono);
+    font-size: var(--type-detail);
+    color: var(--amber-dim);
+    text-decoration: none;
+    letter-spacing: 0.12em;
+    text-transform: lowercase;
+    transition: color 0.15s ease;
+  }
+
+  .sub-link:hover {
+    color: var(--amber);
+  }
+
+  .sub-link:focus-visible {
+    outline: 2px solid var(--amber-bright);
+    outline-offset: 4px;
+  }
+
   /* ── Control Panel ── */
   .controls {
     display: flex;
@@ -466,6 +493,10 @@
         <a href="/tools/" class="nav-btn">BUILD</a>
         <a href="https://theforkiverse.com/@forgone_tokens" class="nav-btn" target="_blank" rel="noopener me" aria-label="Connect — opens Forkiverse">CONNECT</a>
       </nav>
+
+      <div class="sub-nav">
+        <a href="/changelog/" class="sub-link">&#10022; constellation</a>
+      </div>
     </div>
 
     <div class="controls" aria-hidden="true">

@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Constellation Changelog — forgonetokens</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    color-scheme: dark;
+    --env-void: #0d0a08;
+    --env-dark: #1a1410;
+    --cab-body: #2a2118;
+    --cab-accent: #3d3228;
+    --cab-highlight: #5c4a3a;
+    --amber: #d4a056;
+    --amber-bright: #ff9d3a;
+    --amber-dim: #8a6830;
+    --text-primary: #e8dcc8;
+    --text-secondary: #a89880;
+    --screen-bg: #1a1612;
+    --font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+  }
+
+  body {
+    font-family: var(--font-mono);
+    background: var(--env-void);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Grain overlay */
+  .grain {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Constellation container */
+  .constellation {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Connection lines - SVG layer */
+  .connections {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .connection-line {
+    stroke: var(--amber-dim);
+    stroke-width: 1;
+    opacity: 0.15;
+    fill: none;
+  }
+
+  /* Individual change nodes */
+  .change-node {
+    position: absolute;
+    font-family: var(--font-mono);
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform 0.3s ease, color 0.3s ease, text-shadow 0.3s ease;
+    z-index: 2;
+  }
+
+  .change-node:hover {
+    transform: scale(1.1);
+    z-index: 10;
+  }
+
+  .change-node:focus-visible {
+    outline: 2px solid var(--amber-bright);
+    outline-offset: 6px;
+    opacity: 1 !important;
+    color: var(--amber) !important;
+    z-index: 10;
+  }
+
+  /* Recency tiers */
+  .change-node[data-age="0"] {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--amber-bright);
+    text-shadow:
+      0 0 6px var(--amber-bright),
+      0 0 20px rgba(255, 157, 58, 0.6),
+      0 0 40px rgba(255, 157, 58, 0.3);
+    animation: pulse-bright 3s ease-in-out infinite;
+  }
+
+  .change-node[data-age="1"] {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--amber);
+    text-shadow:
+      0 0 4px var(--amber),
+      0 0 15px rgba(212, 160, 86, 0.5);
+    opacity: 0.95;
+  }
+
+  .change-node[data-age="2"] {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--amber);
+    text-shadow: 0 0 8px rgba(212, 160, 86, 0.3);
+    opacity: 0.75;
+  }
+
+  .change-node[data-age="3"] {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--amber-dim);
+    text-shadow: 0 0 4px rgba(138, 104, 48, 0.3);
+    opacity: 0.55;
+  }
+
+  .change-node[data-age="4"] {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    opacity: 0.35;
+  }
+
+  .change-node[data-age="5"] {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--cab-highlight);
+    opacity: 0.2;
+  }
+
+  @keyframes pulse-bright {
+    0%, 100% {
+      text-shadow:
+        0 0 6px var(--amber-bright),
+        0 0 20px rgba(255, 157, 58, 0.6),
+        0 0 40px rgba(255, 157, 58, 0.3);
+    }
+    50% {
+      text-shadow:
+        0 0 10px var(--amber-bright),
+        0 0 30px rgba(255, 157, 58, 0.8),
+        0 0 60px rgba(255, 157, 58, 0.4);
+    }
+  }
+
+  /* Star dots at each node */
+  .change-node::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 6px currentColor;
+  }
+
+  .change-node[data-age="0"]::before {
+    width: 6px;
+    height: 6px;
+    box-shadow: 0 0 12px var(--amber-bright), 0 0 24px var(--amber);
+  }
+
+  /* Hover tooltip showing date and category */
+  .change-node .date-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 10px;
+    background: var(--cab-body);
+    border: 1px solid var(--cab-accent);
+    border-radius: 4px;
+    font-size: 10px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .change-node:hover .date-tooltip,
+  .change-node:focus-visible .date-tooltip {
+    opacity: 1;
+  }
+
+  /* Category badges */
+  .category-badge {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid;
+  }
+
+  .category-badge.feature {
+    color: #7ab56a;
+    border-color: rgba(122, 181, 106, 0.4);
+    background: rgba(122, 181, 106, 0.1);
+  }
+
+  .category-badge.design {
+    color: #a088d0;
+    border-color: rgba(160, 136, 208, 0.4);
+    background: rgba(160, 136, 208, 0.1);
+  }
+
+  .category-badge.integration {
+    color: #5ba8d0;
+    border-color: rgba(91, 168, 208, 0.4);
+    background: rgba(91, 168, 208, 0.1);
+  }
+
+  .category-badge.fix {
+    color: #d0623f;
+    border-color: rgba(208, 98, 63, 0.4);
+    background: rgba(208, 98, 63, 0.1);
+  }
+
+  .category-badge.a11y {
+    color: #d4a056;
+    border-color: rgba(212, 160, 86, 0.4);
+    background: rgba(212, 160, 86, 0.1);
+  }
+
+  /* Back link */
+  .back-link {
+    position: fixed;
+    top: 24px;
+    left: 24px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--amber);
+    text-decoration: none;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    z-index: 100;
+    transition: color 0.2s ease;
+  }
+
+  .back-link:hover {
+    color: var(--amber-bright);
+  }
+
+  .back-link:focus-visible {
+    outline: 2px solid var(--amber-bright);
+    outline-offset: 4px;
+  }
+
+  /* Title */
+  .page-title {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--amber-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0.6;
+    z-index: 100;
+  }
+
+  /* Loading state */
+  .loading-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--amber-dim);
+    letter-spacing: 0.1em;
+    z-index: 2;
+  }
+
+  /* Ambient floating particles */
+  .particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: var(--amber-dim);
+    border-radius: 50%;
+    opacity: 0.3;
+    animation: drift 20s linear infinite;
+  }
+
+  @keyframes drift {
+    0% { transform: translateY(100vh) translateX(0); opacity: 0; }
+    10% { opacity: 0.3; }
+    90% { opacity: 0.3; }
+    100% { transform: translateY(-100px) translateX(50px); opacity: 0; }
+  }
+
+  /* Screen reader only (visible on focus for skip link) */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+
+  .sr-only:focus {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    width: auto;
+    height: auto;
+    clip: auto;
+    margin: 0;
+    padding: 6px 12px;
+    background: var(--cab-body);
+    color: var(--amber);
+    border: 1px solid var(--amber-dim);
+    z-index: 10000;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      transition-delay: 0ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<a href="#constellation" class="sr-only">Skip to constellation</a>
+
+<div class="grain" aria-hidden="true"></div>
+
+<a href="/" class="back-link"><span aria-hidden="true">&larr;</span> Back</a>
+
+<h1 class="sr-only">Constellation Changelog</h1>
+
+<div id="constellation" class="constellation" role="region" aria-label="Changelog constellation">
+  <svg class="connections" aria-hidden="true"></svg>
+  <div class="loading-message">loading constellation...</div>
+</div>
+
+<div class="page-title">Changelog &middot; Constellation View</div>
+
+<script>
+const categoryLabels = {
+  feature: 'Added Feature',
+  design: 'Updated Design',
+  integration: 'Connected Third Party',
+  fix: 'Bug Fix',
+  a11y: 'Accessibility'
+};
+
+const constellation = document.querySelector('.constellation');
+const svg = document.querySelector('.connections');
+const loadingMsg = document.querySelector('.loading-message');
+
+let changes = [];
+
+// Calculate age tier from date string
+// 0 = today, 1 = 1-3d, 2 = 4-7d, 3 = 8-14d, 4 = 15-30d, 5 = 31+d
+function calculateAge(dateStr) {
+  try {
+    var entryDate = new Date(dateStr + 'T00:00:00');
+    var now = new Date();
+    now.setHours(0, 0, 0, 0);
+    entryDate.setHours(0, 0, 0, 0);
+    var diffDays = Math.floor((now - entryDate) / (1000 * 60 * 60 * 24));
+    if (diffDays <= 0) return 0;
+    if (diffDays <= 3) return 1;
+    if (diffDays <= 7) return 2;
+    if (diffDays <= 14) return 3;
+    if (diffDays <= 30) return 4;
+    return 5;
+  } catch (e) {
+    return 5; // fallback to oldest tier
+  }
+}
+
+// Fetch changelog data
+async function loadChangelog() {
+  try {
+    const resp = await fetch('/changelog.json');
+    if (!resp.ok) throw new Error('Failed to load changelog');
+    const entries = await resp.json();
+
+    // Sort by date descending (newest first), then by id descending as tiebreaker
+    entries.sort((a, b) => {
+      const dateDiff = new Date(b.date) - new Date(a.date);
+      if (dateDiff !== 0) return dateDiff;
+      return b.id - a.id;
+    });
+
+    // Assign age based on date distance from today
+    changes = entries.map(function(entry) {
+      return Object.assign({}, entry, { age: calculateAge(entry.date) });
+    });
+
+    loadingMsg.remove();
+    positionNodes();
+    addParticles();
+  } catch (err) {
+    loadingMsg.textContent = 'failed to load changelog data';
+  }
+}
+
+// Estimate node width from text length and age-tier font size
+var ageFontSize = [18, 16, 14, 13, 12, 11];
+function estimateNodeWidth(text, age) {
+  var charWidth = ageFontSize[age] * 0.62; // monospace approximate
+  return text.length * charWidth + 12; // +12 for star dot
+}
+function estimateNodeHeight(age) {
+  return ageFontSize[age] * 1.6;
+}
+
+// Resolve overlapping nodes via iterative displacement
+function resolveOverlaps(positions) {
+  var padding = 16;
+  var maxIterations = 50;
+  var vw = window.innerWidth;
+  var vh = window.innerHeight;
+  var margin = 80;
+
+  for (var pass = 0; pass < maxIterations; pass++) {
+    var moved = false;
+    for (var i = 0; i < positions.length; i++) {
+      for (var j = i + 1; j < positions.length; j++) {
+        var a = positions[i];
+        var b = positions[j];
+        var aHalfW = (a.estWidth + padding) / 2;
+        var aHalfH = (a.estHeight + padding) / 2;
+        var bHalfW = (b.estWidth + padding) / 2;
+        var bHalfH = (b.estHeight + padding) / 2;
+        var overlapX = (aHalfW + bHalfW) - Math.abs(a.x - b.x);
+        var overlapY = (aHalfH + bHalfH) - Math.abs(a.y - b.y);
+
+        if (overlapX > 0 && overlapY > 0) {
+          var dx = a.x - b.x || 1;
+          var dy = a.y - b.y || 1;
+          var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          var pushX = (dx / dist) * (overlapX / 2 + 1);
+          var pushY = (dy / dist) * (overlapY / 2 + 1);
+          a.x += pushX;
+          a.y += pushY;
+          b.x -= pushX;
+          b.y -= pushY;
+          moved = true;
+        }
+      }
+    }
+    if (!moved) break;
+  }
+
+  // Clamp back into viewport
+  positions.forEach(function(p) {
+    p.x = Math.max(margin, Math.min(vw - margin - p.estWidth, p.x));
+    p.y = Math.max(margin, Math.min(vh - margin - p.estHeight, p.y));
+  });
+}
+
+// Check if user prefers reduced motion
+var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Position nodes in organic scatter
+// Recent changes clustered toward center, older ones drift outward
+function positionNodes() {
+  var width = window.innerWidth;
+  var height = window.innerHeight;
+  var centerX = width / 2;
+  var centerY = height / 2;
+
+  var positions = [];
+
+  changes.forEach(function(change, i) {
+    // Base distance from center increases with age
+    var baseDistance = 80 + (change.age * 60) + (Math.random() * 100);
+
+    // Angle with some randomness, spiral outward
+    var angle = (i / changes.length) * Math.PI * 2.5 + (Math.random() * 0.5);
+
+    // Calculate position
+    var x = centerX + Math.cos(angle) * baseDistance;
+    var y = centerY + Math.sin(angle) * baseDistance;
+
+    // Add jitter
+    x += (Math.random() - 0.5) * 80;
+    y += (Math.random() - 0.5) * 60;
+
+    // Clamp to viewport with padding
+    var pad = 100;
+    x = Math.max(pad, Math.min(width - pad - 150, x));
+    y = Math.max(pad, Math.min(height - pad, y));
+
+    var estWidth = estimateNodeWidth(change.text, change.age);
+    var estHeight = estimateNodeHeight(change.age);
+    positions.push({ x: x, y: y, change: change, estWidth: estWidth, estHeight: estHeight });
+  });
+
+  // Resolve overlaps before DOM insertion
+  resolveOverlaps(positions);
+
+  var fragment = document.createDocumentFragment();
+
+  positions.forEach(function(pos, i) {
+    var change = pos.change;
+
+    // Create node element
+    var node = document.createElement('a');
+    node.href = change.link;
+    node.className = 'change-node';
+    node.dataset.age = change.age;
+    node.dataset.id = change.id;
+    node.style.left = pos.x + 'px';
+    node.style.top = pos.y + 'px';
+    node.setAttribute('aria-label', change.text + ' — ' + (categoryLabels[change.category] || change.category) + ', ' + change.date);
+
+    // Build content safely (no innerHTML)
+    node.textContent = change.text;
+    var tooltip = document.createElement('span');
+    tooltip.className = 'date-tooltip';
+    tooltip.setAttribute('aria-hidden', 'true');
+    var badge = document.createElement('span');
+    badge.className = 'category-badge ' + change.category;
+    badge.textContent = categoryLabels[change.category] || change.category;
+    var dateSpan = document.createElement('span');
+    dateSpan.textContent = change.date;
+    tooltip.appendChild(badge);
+    tooltip.appendChild(dateSpan);
+    node.appendChild(tooltip);
+
+    // Staggered entrance animation (skip if reduced motion)
+    if (!prefersReducedMotion) {
+      node.style.opacity = '0';
+      node.style.transform = 'scale(0.8)';
+      setTimeout(function() {
+        node.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        node.style.opacity = '';
+        node.style.transform = '';
+      }, 100 + i * 80);
+    }
+
+    fragment.appendChild(node);
+  });
+
+  constellation.appendChild(fragment);
+
+  // Draw connection lines between related/nearby nodes
+  drawConnections(positions);
+}
+
+function drawConnections(positions) {
+  svg.innerHTML = '';
+
+  for (let i = 0; i < positions.length; i++) {
+    for (let j = i + 1; j < positions.length; j++) {
+      const a = positions[i];
+      const b = positions[j];
+
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      // Connect if close enough and age difference is small
+      const ageDiff = Math.abs(a.change.age - b.change.age);
+      const maxDist = 250 - (ageDiff * 30);
+
+      if (distance < maxDist && ageDiff <= 2) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', a.x + 50);
+        line.setAttribute('y1', a.y + 10);
+        line.setAttribute('x2', b.x + 50);
+        line.setAttribute('y2', b.y + 10);
+        line.setAttribute('class', 'connection-line');
+
+        // Fade lines based on combined age
+        const avgAge = (a.change.age + b.change.age) / 2;
+        line.style.opacity = 0.2 - (avgAge * 0.03);
+
+        svg.appendChild(line);
+      }
+    }
+  }
+}
+
+// Add ambient particles (skip entirely if user prefers reduced motion)
+function addParticles() {
+  if (prefersReducedMotion) return;
+  for (let i = 0; i < 15; i++) {
+    var particle = document.createElement('div');
+    particle.className = 'particle';
+    particle.setAttribute('aria-hidden', 'true');
+    particle.style.left = Math.random() * 100 + 'vw';
+    particle.style.animationDelay = Math.random() * 20 + 's';
+    particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+    constellation.appendChild(particle);
+  }
+}
+
+// Initialize
+loadChangelog();
+
+// Reposition on resize (debounced)
+let resizeTimeout;
+window.addEventListener('resize', function() {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(function() {
+    document.querySelectorAll('.change-node, .particle').forEach(function(el) { el.remove(); });
+    positionNodes();
+    addParticles();
+  }, 250);
+});
+</script>
+
+</body>
+</html>
