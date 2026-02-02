@@ -71,7 +71,6 @@
     font-family: var(--font-mono);
     text-decoration: none;
     white-space: nowrap;
-    cursor: pointer;
     transition: transform 0.3s ease, color 0.3s ease, text-shadow 0.3s ease;
     z-index: 2;
   }
@@ -553,8 +552,7 @@ function positionNodes() {
     var change = pos.change;
 
     // Create node element
-    var node = document.createElement('a');
-    node.href = change.link;
+    var node = document.createElement('span');
     node.className = 'change-node';
     node.dataset.age = change.age;
     node.dataset.id = change.id;
