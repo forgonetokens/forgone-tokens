@@ -133,5 +133,14 @@
     "link": "/changelog/",
     "date": "2026-02-02",
     "category": "feature"
+  },
+  {
+    "id": 16,
+    "hash": "1928219",
+    "text": "CMD Palette update",
+    "description": "New build removes macOS security warnings",
+    "link": "/tools/",
+    "date": "2026-02-02",
+    "category": "fix"
   }
 ]
